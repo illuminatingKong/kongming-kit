@@ -19,3 +19,17 @@
 
 # Go workspace file
 go.work
+
+
+gopath/
+
+# ide
+.idea
+
+#vscode
+.vscode
+
+#mac
+.DS_Store
+build/.DS_Store
+cmd/.DS_Store
