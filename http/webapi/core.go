@@ -13,19 +13,17 @@ type IWebHTTPApi interface {
 	Limit() int64
 	Total() int64
 	HttpCode() int
-	OmitEmptyKeys() []string
 }
 
 type WebHTTPApi struct {
-	code          int
-	message       string
-	data          interface{}
-	extra         map[string]interface{}
-	page          int64
-	limit         int64
-	total         int64
-	httpCode      int
-	omitEmptyKeys []string
+	code     int
+	message  string
+	data     interface{}
+	extra    map[string]interface{}
+	page     int64
+	limit    int64
+	total    int64
+	httpCode int
 }
 
 // NewWebHTTPApi create a new WebHTTPApi for user quickly create a response
@@ -44,8 +42,6 @@ func (w *WebHTTPApi) Page() int64                   { return w.page }
 func (w *WebHTTPApi) Limit() int64                  { return w.limit }
 func (w *WebHTTPApi) Total() int64                  { return w.total }
 func (w *WebHTTPApi) HttpCode() int                 { return w.httpCode }
-func (w *WebHTTPApi) OmitEmptyKeys() []string       { return w.omitEmptyKeys }
-
 
 func (w *WebHTTPApi) SetCode(code int) *WebHTTPApi {
 	w.code = code
@@ -87,28 +83,6 @@ func (w *WebHTTPApi) SetHttpCode(httpCode int) *WebHTTPApi {
 	return w
 }
 
-func (w *WebHTTPApi) SetOmitEmptyKeys(omit ...string) *WebHTTPApi {
-	w.omitEmptyKeys = omit
-	return w
-}
-
-func (w *WebHTTPApi) Response() map[string]interface{} {
-	response := map[string]interface{}{
-		"code":    w.Code(),
-		"message": w.Message(),
-		"data":    w.Data(),
-		"extra":   w.Extra(),
-		"page":    w.Page(),
-		"limit":   w.Limit(),
-		"total":   w.Total(),
-	}
-	if len(w.omitEmptyKeys) == 0 {
-		return response
-	}
-	return omitEmptyValues(response, w.omitEmptyKeys...)
-
-}
-
 func WebHttpApiResponseHandler(resp interface{}) (code int, data map[string]interface{}) {
 	v, ok := resp.(*WebHTTPApi)
 	var defaultHttpCord = 200
@@ -117,7 +91,16 @@ func WebHttpApiResponseHandler(resp interface{}) (code int, data map[string]inte
 			defaultHttpCord = v.HttpCode()
 		}
 		v.HttpCode()
-		return defaultHttpCord, v.Response()
+
+		return 200, map[string]interface{}{
+			"code":    v.Code(),
+			"message": v.Message(),
+			"data":    v.Data(),
+			"extra":   v.Extra(),
+			"page":    v.Page(),
+			"limit":   v.Limit(),
+			"total":   v.Total(),
+		}
 	}
 
 	return defaultHttpCord, map[string]interface{}{
