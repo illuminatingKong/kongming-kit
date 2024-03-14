@@ -27,11 +27,15 @@ var (
 
 type Router struct{}
 
+var respSuccess = webapi.RespDefault
+var respError = webapi.RespDefault
+
 func (*Router) Inject(router *gin.RouterGroup) {
 
 	version := router.Group("/core")
 	{
 		version.GET("/version", showVersion)
+		version.GET("/hello", hello)
 	}
 
 }
@@ -42,8 +46,16 @@ func showVersion(c *gin.Context) {
 	now := time.Now()
 	conf := runner.GetConf()
 	coreversion := conf.GetString("core.version")
-	ctx.Resp, ctx.Err = webapi.RespSuccess.SetCode(201).SetData(map[string]interface{}{"version": coreversion,
-		"now": now}).SetMessage("get version"), nil
+
+	ctx.Resp, ctx.Err = respSuccess().SetCode(201).SetData(map[string]interface{}{"version": coreversion,
+		"now": now}).SetMessage("get version").SetHttpCode(200).SetPage(1), nil
+
+}
+
+func hello(c *gin.Context) {
+	ctx := corehandler.NewContext(c)
+	defer func() { corehandler.WebHttpApiResponse(c, ctx) }()
+	ctx.Resp, ctx.Err = respSuccess().SetData(map[string]interface{}{"hello": "kongming"}).SetMessage("say hello"), nil
 
 }
 

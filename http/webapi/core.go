@@ -1,6 +1,8 @@
 package webapi
 
-var RespSuccess = NewWebHTTPApi(200).SetMessage("success")
+var RespDefault func() *WebHTTPApi = func() *WebHTTPApi {
+	return NewWebHTTPApi(200)
+}
 
 type IWebHTTPApi interface {
 	Code() int
@@ -40,16 +42,6 @@ func (w *WebHTTPApi) Page() int64                   { return w.page }
 func (w *WebHTTPApi) Limit() int64                  { return w.limit }
 func (w *WebHTTPApi) Total() int64                  { return w.total }
 func (w *WebHTTPApi) HttpCode() int                 { return w.httpCode }
-
-//func (w *WebHTTPApi) AddCode(v int) *WebHTTPApi {
-//	w.code = v
-//	return w
-//}
-//
-//func (w *WebHTTPApi) AddMessage(m string) *WebHTTPApi {
-//	w.message = m
-//	return w
-//}
 
 func (w *WebHTTPApi) SetCode(code int) *WebHTTPApi {
 	w.code = code
@@ -99,6 +91,7 @@ func WebHttpApiResponseHandler(resp interface{}) (code int, data map[string]inte
 			defaultHttpCord = v.HttpCode()
 		}
 		v.HttpCode()
+
 		return 200, map[string]interface{}{
 			"code":    v.Code(),
 			"message": v.Message(),
