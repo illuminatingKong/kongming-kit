@@ -15,6 +15,8 @@ var (
 	// ErrNotFound ...
 	ErrNotFound          = NewHTTPError(404, "Request Not Found")
 	InvalidDataInRequest = "invalid data json in request"
+	// ResponseError  export common response error, can use addErr to add error replace default error
+	RespnseError = NewHTTPError(4000, "Response Error")
 )
 
 type IHTTPError interface {
@@ -92,7 +94,7 @@ func (e *HTTPError) AddDesc(desc string) *HTTPError {
 
 // AddErr ...
 func (e *HTTPError) AddErr(err error) *HTTPError {
-	e.desc = err.Error()
+	e.err = err.Error()
 	return e
 }
 

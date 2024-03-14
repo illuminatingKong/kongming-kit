@@ -6,6 +6,7 @@ import (
 	"github.com/illuminatingKong/kongming-kit/http/corehandler"
 	"github.com/illuminatingKong/kongming-kit/http/middleware"
 	"github.com/illuminatingKong/kongming-kit/http/service"
+	"github.com/illuminatingKong/kongming-kit/http/webapi"
 	"github.com/illuminatingKong/kongming-kit/runner"
 	"github.com/oklog/run"
 	"net/http"
@@ -37,11 +38,13 @@ func (*Router) Inject(router *gin.RouterGroup) {
 
 func showVersion(c *gin.Context) {
 	ctx := corehandler.NewContext(c)
-	defer func() { corehandler.JSONResponse(c, ctx) }()
+	defer func() { corehandler.WebHttpApiResponse(c, ctx) }()
 	now := time.Now()
 	conf := runner.GetConf()
 	coreversion := conf.GetString("core.version")
-	ctx.Resp, ctx.Err = map[string]interface{}{"pong": coreversion, "time": now}, nil
+	ctx.Resp, ctx.Err = webapi.RespSuccess.SetCode(201).SetData(map[string]interface{}{"version": coreversion,
+		"now": now}).SetMessage("get version"), nil
+
 }
 
 func TestStartProject(t *testing.T) {

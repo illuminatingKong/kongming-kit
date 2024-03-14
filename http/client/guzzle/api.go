@@ -15,20 +15,6 @@ import (
 	"github.com/hashicorp/go-cleanhttp"
 )
 
-const (
-	// HTTPAddrEnvName defines an environment variable name which sets
-	// the HTTP address if there is no -http-addr specified.
-	HTTPAddrEnvName = "Guzzle_HTTP_ADDR"
-
-	// HTTPAuthEnvName defines an environment variable name which sets
-	// the HTTP authentication header.
-	HTTPAuthEnvName = "Guzzle_HTTP_AUTH"
-
-	// HTTPSSLEnvName defines an environment variable name which sets
-	// whether or not to use HTTPS.
-	HTTPSSLEnvName = "Guzzle_HTTP_SSL"
-)
-
 // Config is used to configure the creation of a client
 type Config struct {
 	// Address is the address of the Guzzle core
@@ -124,6 +110,35 @@ func NewClient(config *Config) (*Client, error) {
 
 	if config.Transport == nil {
 		config.Transport = defConfig.Transport
+	} else {
+		//If parameter options are configured, they will override the default options
+		if config.Transport.Proxy != nil {
+			defConfig.Transport.Proxy = config.Transport.Proxy
+		}
+		if config.Transport.DialContext != nil {
+			defConfig.Transport.DialContext = config.Transport.DialContext
+		}
+		if config.Transport.MaxIdleConns >= 0 {
+			defConfig.Transport.MaxIdleConns = config.Transport.MaxIdleConns
+		}
+		if config.Transport.MaxIdleConnsPerHost >= 0 {
+			defConfig.Transport.MaxIdleConnsPerHost = config.Transport.MaxIdleConnsPerHost
+		}
+		if config.Transport.IdleConnTimeout >= 0 {
+			defConfig.Transport.IdleConnTimeout = config.Transport.IdleConnTimeout
+		}
+		if config.Transport.TLSHandshakeTimeout >= 0 {
+			defConfig.Transport.TLSHandshakeTimeout = config.Transport.TLSHandshakeTimeout
+		}
+		if config.Transport.ExpectContinueTimeout >= 0 {
+			defConfig.Transport.ExpectContinueTimeout = config.Transport.ExpectContinueTimeout
+		}
+		if config.Transport.ResponseHeaderTimeout >= 0 {
+			defConfig.Transport.ResponseHeaderTimeout = config.Transport.ResponseHeaderTimeout
+		}
+		if config.Transport.TLSClientConfig != nil {
+			defConfig.Transport.TLSClientConfig = config.Transport.TLSClientConfig
+		}
 	}
 
 	if config.TLSConfig.Address == "" {
@@ -152,6 +167,8 @@ func NewClient(config *Config) (*Client, error) {
 
 	if config.WaitTime == 0 {
 		config.WaitTime = defConfig.Transport.IdleConnTimeout
+	} else {
+		defConfig.Transport.IdleConnTimeout = config.WaitTime
 	}
 
 	if config.HttpClient == nil {
@@ -178,7 +195,7 @@ func NewClient(config *Config) (*Client, error) {
 				Transport: trans,
 			}
 		default:
-			return nil, fmt.Errorf("Unknown protocol scheme: %s", parts[0])
+			return nil, fmt.Errorf("unknown protocol scheme: %s", parts[0])
 		}
 		config.Address = parts[1]
 	}
@@ -257,14 +274,14 @@ func (r *request) toHTTP() (*http.Request, error) {
 	return req, nil
 }
 
-// NewDoRequest runs a request with our client
+// NewDoRequest runs a request instance with http client
 func (c *Client) NewDoRequest(r *request) (time.Duration, *http.Response, error) {
 	req, err := r.toHTTP()
 	if err != nil {
 		return 0, nil, err
 	}
 	start := time.Now()
-	c.config.HttpClient.Timeout = c.config.WaitTime
+	//c.config.HttpClient.Timeout = c.config.WaitTime
 
 	resp, err := c.config.HttpClient.Do(req)
 	if err != nil {
@@ -275,7 +292,7 @@ func (c *Client) NewDoRequest(r *request) (time.Duration, *http.Response, error)
 	return diff, resp, err
 }
 
-// newRequest is used to create a new request
+// DoNewRequest new a request is used to create a request struct
 func (c *Client) DoNewRequest(method, path string) *request {
 	r := &request{
 		config: &c.config,
@@ -292,7 +309,7 @@ func (c *Client) DoNewRequest(method, path string) *request {
 	return r
 }
 
-// requireOK is used to wrap doRequest and check for a 200
+// RequireOK  is used to wrap doRequest
 func RequireOK(d time.Duration, resp *http.Response, e error) *Response {
 	return buildResponse(d, resp, e)
 }

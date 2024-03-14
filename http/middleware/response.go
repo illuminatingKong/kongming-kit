@@ -3,6 +3,7 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/illuminatingKong/kongming-kit/http/errorsx"
+	"github.com/illuminatingKong/kongming-kit/http/webapi"
 	"net/http"
 )
 
@@ -23,6 +24,14 @@ func handleResponse(c *gin.Context) {
 
 	if v, ok := c.Get(ResponseData); ok {
 		setResponse(v, c)
+	}
+
+	if v, ok := c.Get(WebHTTPApiError); ok {
+		c.JSON(errorsx.ErrorMessage(v.(error)))
+		return
+	}
+	if v, ok := c.Get(WebHTTPApiResponse); ok {
+		c.JSON(webapi.WebHttpApiResponseHandler(v))
 	}
 
 	// skip if response or status is already set
