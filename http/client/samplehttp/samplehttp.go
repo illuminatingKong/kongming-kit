@@ -2,17 +2,23 @@ package samplehttp
 
 import (
 	"bytes"
+	"context"
 	"github.com/illuminatingKong/kongming-kit/base/logx"
 	"github.com/illuminatingKong/kongming-kit/base/logx/logrusx"
 	"github.com/illuminatingKong/kongming-kit/http/client/guzzle"
 	"net/http"
 )
 
+var NewProvider = func(scheme, instance string) (*SampleProvider, error) {
+	return New(scheme, instance)
+}
+
 type SampleProvider struct {
 	Address    string
 	Scheme     string
 	HttpClient *guzzle.Client
 	Log        logx.Logger
+	Context    context.Context
 }
 
 type ResponseWrapper struct {
@@ -23,9 +29,9 @@ type ResponseWrapper struct {
 
 func New(scheme, address string) (*SampleProvider, error) {
 	option := &guzzle.Config{
-		Address:      address,
-		Scheme:       scheme,
-		ValidateHost: true,
+		Address: address,
+		Scheme:  scheme,
+		//ValidateHost: true,
 	}
 
 	httpClient, err := guzzle.NewClient(option)
@@ -34,9 +40,16 @@ func New(scheme, address string) (*SampleProvider, error) {
 	}
 	var formatter logrusx.JsonFormatter
 	log := logrusx.New(logrusx.WithFormatter(formatter))
-	return &SampleProvider{Address: address, Scheme: scheme, HttpClient: httpClient, Log: log}, nil
+	return &SampleProvider{Address: address, Scheme: scheme, HttpClient: httpClient, Log: log, Context: context.Background()}, nil
 
 }
+
+func (p *SampleProvider) setHeader() {}
+
+//func (p *SampleProvider) Do(method, uri string, option IOptionFun) interface{} {
+//	r := p.HttpClient.DoNewRequest(method, uri)
+//	option.AddParam()
+//}
 
 func (p *SampleProvider) Get(uri string) ResponseWrapper {
 	r := p.HttpClient.DoNewRequest("GET", uri)
