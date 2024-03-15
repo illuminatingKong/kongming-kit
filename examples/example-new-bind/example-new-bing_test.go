@@ -40,6 +40,14 @@ func (*Router) Inject(router *gin.RouterGroup) {
 
 }
 
+func customResponseSerializer(c *gin.Context) (*corehandler.Context, *webapi.WebHTTPApi) {
+	return func(c *gin.Context) (*corehandler.Context, *webapi.WebHTTPApi) {
+		ctx := corehandler.NewContext(c)
+		resp := respSuccess().SetOmitEmptyKeys("extra", "page", "total", "limit")
+		return ctx, resp
+	}(c)
+}
+
 func showVersion(c *gin.Context) {
 	ctx := corehandler.NewContext(c)
 	defer func() { corehandler.WebHttpApiResponse(c, ctx) }()
@@ -52,11 +60,11 @@ func showVersion(c *gin.Context) {
 
 }
 
+// hello is a hello function and use customResponseSerializer will return a custom response serializer
 func hello(c *gin.Context) {
-	ctx := corehandler.NewContext(c)
+	ctx, resp := customResponseSerializer(c)
 	defer func() { corehandler.WebHttpApiResponse(c, ctx) }()
-	ctx.Resp, ctx.Err = respSuccess().SetData(map[string]interface{}{"hello": "kongming"}).SetMessage("say hello"), nil
-
+	ctx.Resp, ctx.Err = resp.SetData(map[string]interface{}{"hello": "kongming"}).SetMessage("say hello"), nil
 }
 
 func TestStartProject(t *testing.T) {
