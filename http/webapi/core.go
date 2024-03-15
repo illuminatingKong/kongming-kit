@@ -46,6 +46,7 @@ func (w *WebHTTPApi) Total() int64                  { return w.total }
 func (w *WebHTTPApi) HttpCode() int                 { return w.httpCode }
 func (w *WebHTTPApi) OmitEmptyKeys() []string       { return w.omitEmptyKeys }
 
+
 func (w *WebHTTPApi) SetCode(code int) *WebHTTPApi {
 	w.code = code
 	return w

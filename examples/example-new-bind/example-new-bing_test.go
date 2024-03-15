@@ -55,8 +55,17 @@ func showVersion(c *gin.Context) {
 	conf := runner.GetConf()
 	coreversion := conf.GetString("core.version")
 
+
+
 	ctx.Resp, ctx.Err = respSuccess().SetCode(201).SetData(map[string]interface{}{"version": coreversion,
 		"now": now}).SetMessage("get version").SetHttpCode(200).SetPage(1), nil
+
+}
+
+func hello(c *gin.Context) {
+	ctx := corehandler.NewContext(c)
+	defer func() { corehandler.WebHttpApiResponse(c, ctx) }()
+	ctx.Resp, ctx.Err = respSuccess().SetData(map[string]interface{}{"hello": "kongming"}).SetMessage("say hello"), nil
 
 }
 
