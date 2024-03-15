@@ -95,6 +95,24 @@ type Client struct {
 	config Config
 }
 
+func (c *Client) SetTransport(transportFn func() *http.Transport) *Client {
+	c.config.Transport = transportFn()
+	return c
+}
+
+func (c *Client) SetValidateHost(v bool) *Client {
+	c.config.ValidateHost = v
+	return c
+}
+
+func (c *Client) SetBaseAuth(username, password string) *Client {
+	c.config.HttpAuth = &HttpBasicAuth{
+		Username: username,
+		Password: password,
+	}
+	return c
+}
+
 // NewClient returns a new client
 func NewClient(config *Config) (*Client, error) {
 	// bootstrap the config

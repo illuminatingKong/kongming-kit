@@ -6,25 +6,19 @@ import (
 )
 
 func WebHttpApiResponse(c *gin.Context, ctx *Context) {
-	c.Header("core-requestID", ctx.RequestID)
+	requestID := ctx.RequestID
+	requestFullPath := c.FullPath()
+	c.Header("core-requestID", requestID)
 	if ctx.Err != nil {
-		ctx.Logger.Errorf("requestID: %s  Error: %+v", ctx.RequestID, ctx.Err)
+		ctx.Logger.Errorf("requestID: %s, error: %+v, requestURL: %s", requestID, ctx.Err, requestFullPath)
 		c.Set(middleware.WebHTTPApiError, ctx.Err)
 		c.Abort()
 		return
 	}
 
 	if ctx.Resp != nil {
-		ctx.Logger.Infof("requestID: %s  Response: %+v", ctx.RequestID, ctx.Resp)
+		ctx.Logger.Infof("requestID: %s, response: %+v, requestURL: %s", requestID, ctx.Resp, requestFullPath)
 		realResp := responseHelper(ctx.Resp)
 		c.Set(middleware.WebHTTPApiResponse, realResp)
 	}
 }
-
-//func responseHelper(response interface{}) interface{} {
-//	switch response.(type) {
-//	case string, []byte:
-//		return response
-//	}
-//	return response
-//}

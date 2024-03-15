@@ -82,6 +82,12 @@ func NewHttpClient(transport *http.Transport, tlsConf TLSConfig) (*http.Client, 
 	return client, nil
 }
 
+func (r *request) AddBulkHeader(value map[string]string) {
+	for k, v := range value {
+		r.header.Set(k, v)
+	}
+}
+
 // setQueryOptions is used to annotate the request with
 // additional query options
 func (r *request) SetParam(position, name, value string) {
