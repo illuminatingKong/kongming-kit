@@ -104,3 +104,7 @@ func (r *request) SetParam(position, name, value string) {
 func (r *request) SetBody(body *strings.Reader) {
 	r.body = body
 }
+
+func (r *request) GetRequest() *request {
+	return r
+}

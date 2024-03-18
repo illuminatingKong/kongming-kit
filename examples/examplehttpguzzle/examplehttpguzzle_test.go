@@ -7,10 +7,14 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	s, err := samplehttp.New("https", "httpbin.org")
+	s, err := samplehttp.NewProvider("https", "httpbin.org")
 	if err != nil {
 		panic(err)
 	}
-	r := s.Get("/ip")
-	fmt.Printf("response: %+v", r)
+	type dome struct {
+		Origin string `json:"origin"`
+	}
+	req := s.Do("GET", "/ip", &samplehttp.Option{})
+	out := req.Json(&dome{})
+	fmt.Printf("response: %+v", out)
 }

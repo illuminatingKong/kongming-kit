@@ -28,7 +28,6 @@ var (
 type Router struct{}
 
 var respSuccess = webapi.RespDefault
-var respError = webapi.RespDefault
 
 func (*Router) Inject(router *gin.RouterGroup) {
 
