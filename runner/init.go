@@ -6,7 +6,6 @@ import (
 	"github.com/illuminatingKong/kongming-kit/base/configx"
 	"github.com/illuminatingKong/kongming-kit/base/configx/config"
 	"github.com/illuminatingKong/kongming-kit/base/logx"
-	"github.com/illuminatingKong/kongming-kit/base/logx/logrusx"
 	"sync"
 	"time"
 )
@@ -89,7 +88,7 @@ func GetConf() configx.Conf {
 
 func GetLogger() logx.Logger {
 	if Logger == nil {
-		return logrusx.New(logrusx.WithFormatter(formatter))
+		panic(errors.New("logger is nil"))
 	}
 	return Logger
 }

@@ -111,5 +111,5 @@ func (d *Deploy) ReNew(yamlText string, rs *runtime.Scheme, opts Option) ([]runt
 	if errs.Len() == 0 {
 		return multiResource, errs.ErrorOrNil()
 	}
-	return nil, errs
+	return nil, errs.ErrorOrNil()
 }

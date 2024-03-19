@@ -33,3 +33,5 @@ gopath/
 .DS_Store
 build/.DS_Store
 cmd/.DS_Store
+
+rollout/yaml/apply_test.go

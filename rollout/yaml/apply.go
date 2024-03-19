@@ -38,7 +38,7 @@ func (d *Deploy) Apply(objs []runtime.Object, cl client.Client) error {
 		}
 	}
 
-	return errs
+	return errs.ErrorOrNil()
 }
 
 func (d *Deploy) CreateOrPatch(yamlText string, cl client.Client, opts Option) error {

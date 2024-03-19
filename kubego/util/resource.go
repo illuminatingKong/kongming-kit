@@ -16,7 +16,7 @@ func NewResources(parsedYaml string, rs *runtime.Scheme) ([]*unstructured.Unstru
 		err.Errors = errs
 		return resources, err.ErrorOrNil()
 	}
-	return resources, err
+	return resources, err.ErrorOrNil()
 }
 
 func Verify(yamlStr string) ([]*unstructured.Unstructured, []error) {
