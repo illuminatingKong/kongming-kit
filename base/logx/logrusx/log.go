@@ -38,15 +38,14 @@ func WithFormatter(l JsonFormatter) Option {
 	return &option{l}
 }
 
-func (l Logger) AddHook(hook interface{}) error {
+func (l Logger) AddHook(hook logrus.Hook) error {
 	var err error
 	defer func() {
 		if p := recover(); p != nil {
 			err = errors.New(fmt.Sprintf("Add hook has error: %+v", p))
 		}
 	}()
-	h := hook.(logrus.Hook)
-	logrus.AddHook(h)
+	logrus.AddHook(hook)
 	return err
 }
 

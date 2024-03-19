@@ -41,7 +41,7 @@ func (d *Deploy) Apply(objs []runtime.Object, cl client.Client) error {
 	return errs
 }
 
-func (d *Deploy) Create(yamlText string, cl client.Client, opts Option) error {
+func (d *Deploy) CreateOrPatch(yamlText string, cl client.Client, opts Option) error {
 	var errs *multierror.Error
 	verifyErr := d.Verify(yamlText)
 	if verifyErr != nil {

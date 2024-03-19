@@ -1,5 +1,7 @@
 package logx
 
+import "github.com/sirupsen/logrus"
+
 type Fields map[string]interface{}
 
 type Logger interface {
@@ -17,6 +19,6 @@ type Logger interface {
 	Errorf(template string, args ...interface{})
 	Panicf(template string, args ...interface{})
 	Fatalf(template string, args ...interface{})
-	AddHook(hook interface{}) error
+	AddHook(hook logrus.Hook) error
 	WithFieldsX(f func(args ...interface{}), m string, keyvals ...interface{})
 }
