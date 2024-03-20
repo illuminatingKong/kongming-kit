@@ -25,5 +25,5 @@ func TestLogFiled(t *testing.T) {
 	var formatter logrusx.JsonFormatter
 	Logger = logrusx.New(logrusx.WithFormatter(formatter))
 	today := time.Now().String()
-	Logger.WithFieldsX(Logger.Info, "module", "today", today)
+	Logger.WithFieldsX(Logger.Info, "your_date_module", "today", today)
 }

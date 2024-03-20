@@ -1,8 +1,6 @@
 package logrusx
 
 import (
-	"errors"
-	"fmt"
 	"github.com/illuminatingKong/kongming-kit/base/logx"
 	"github.com/illuminatingKong/kongming-kit/base/msg"
 	"github.com/sirupsen/logrus"
@@ -38,15 +36,8 @@ func WithFormatter(l JsonFormatter) Option {
 	return &option{l}
 }
 
-func (l Logger) AddHook(hook logrus.Hook) error {
-	var err error
-	defer func() {
-		if p := recover(); p != nil {
-			err = errors.New(fmt.Sprintf("Add hook has error: %+v", p))
-		}
-	}()
-	logrus.AddHook(hook)
-	return err
+func (l Logger) AddHook(hook logrus.Hook) {
+	l.Entry.Logger.AddHook(hook)
 }
 
 func (l Logger) WithFieldsX(f func(args ...interface{}), m string, keyvals ...interface{}) {

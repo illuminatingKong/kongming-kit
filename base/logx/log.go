@@ -19,6 +19,6 @@ type Logger interface {
 	Errorf(template string, args ...interface{})
 	Panicf(template string, args ...interface{})
 	Fatalf(template string, args ...interface{})
-	AddHook(hook logrus.Hook) error
+	AddHook(hook logrus.Hook)
 	WithFieldsX(f func(args ...interface{}), m string, keyvals ...interface{})
 }

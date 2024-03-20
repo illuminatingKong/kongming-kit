@@ -10,7 +10,7 @@ func LogMessage(m string, keyvals ...interface{}) string {
 	}
 
 	for i := 0; i <= len(keyvals)-2; i += 2 {
-		out = fmt.Sprintf("%s %v=%v", out, keyvals[i], keyvals[i+1])
+		out = fmt.Sprintf("%s: %v=%v", out, keyvals[i], keyvals[i+1])
 		//out = fmt.Sprintf("%s %v", out, keyvals[i])
 	}
 

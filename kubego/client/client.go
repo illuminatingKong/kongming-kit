@@ -7,6 +7,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/cluster"
 )
 
@@ -40,4 +41,8 @@ func NewRestToClientSet(restConfig *restclient.Config) (*kubernetes.Clientset, e
 		return nil, errors.Wrap(err, ConnectError.Error())
 	}
 	return clientSet, nil
+}
+
+func NewClent(restConfig *restclient.Config, options runtimeclient.Options) (runtimeclient.Client, error) {
+	return runtimeclient.New(restConfig, options)
 }
