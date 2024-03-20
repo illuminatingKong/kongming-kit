@@ -426,3 +426,10 @@ spec:
 func QueryPodsStatus(informer informers.SharedInformerFactory, label map[string]string) 
 ```
 
+
+### 生成UUID
+
+生成24位订单号，uuid 包下Generate 闭包函数可以生成。 
+
+
+ 
