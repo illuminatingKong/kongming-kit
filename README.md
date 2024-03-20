@@ -17,7 +17,7 @@ kongming-kit 的定位是一个快速开发工具库，提供了一些常用的�
 - [x] kubego
 - [x] rollout
 - [x] http client
-- [ ] sample httpclient 
+- [x] sample httpclient 
 - [ ] uwin cmdb client
 - [ ] grpc
 - [ ] exec command
@@ -135,220 +135,9 @@ kongming-kit 不愿意做框架，但是bind 提供创建一个新的项目时�
 
 5 定义一个业务方法，用于处理请求，返回数据
 
-```shell
-import (
-	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/illuminatingKong/kongming-kit/http/corehandler"
-	"github.com/illuminatingKong/kongming-kit/http/middleware"
-	"github.com/illuminatingKong/kongming-kit/http/service"
-	"github.com/illuminatingKong/kongming-kit/http/webapi"
-	"github.com/illuminatingKong/kongming-kit/runner"
-	"github.com/oklog/run"
-	"net/http"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"testing"
-	"time"
-)
-
-var (
-	httpServiceMode = "debug"
-	projectName     = "test"
-	addr            = "0.0.0.0:8081"
-	configDir       = "$HOME/workspace/illuminatingKong/kongming-kit/examples/example-new-bind"
-)
-
-type Router struct{}
-
-var respSuccess = webapi.RespDefault
-
-func (*Router) Inject(router *gin.RouterGroup) {
-
-	version := router.Group("/core")
-	{
-		version.GET("/version", showVersion)
-		version.GET("/hello", hello)
-	}
-
-}
-
-func customResponseSerializer(c *gin.Context) (*corehandler.Context, *webapi.WebHTTPApi) {
-	return func(c *gin.Context) (*corehandler.Context, *webapi.WebHTTPApi) {
-		ctx := corehandler.NewContext(c)
-		resp := respSuccess().SetOmitEmptyKeys("extra", "page", "total", "limit")
-		return ctx, resp
-	}(c)
-}
-
-func showVersion(c *gin.Context) {
-	ctx := corehandler.NewContext(c)
-	defer func() { corehandler.WebHttpApiResponse(c, ctx) }()
-	now := time.Now()
-	conf := runner.GetConf()
-	coreversion := conf.GetString("core.version")
-
-	ctx.Resp, ctx.Err = respSuccess().SetCode(201).SetData(map[string]interface{}{"version": coreversion,
-		"now": now}).SetMessage("get version").SetHttpCode(200).SetPage(1), nil
-
-}
-
-// hello is a hello function and use customResponseSerializer will return a custom response serializer
-func hello(c *gin.Context) {
-	ctx, resp := customResponseSerializer(c)
-	defer func() { corehandler.WebHttpApiResponse(c, ctx) }()
-	ctx.Resp, ctx.Err = resp.SetData(map[string]interface{}{"hello": "kongming"}).SetMessage("say hello"), nil
-}
-
-func TestStartProject(t *testing.T) {
-	o := runner.NewContainer(projectName, addr).NewConfig(
-		configDir, "yaml", projectName)
-	var once sync.Once
-	err := o.InitBase(context.Background(), &once)
-	if err != nil {
-		panic(err)
-	}
-
-	project := NewBind(projectName, o)
-	project.Start()
-}
-
-type Bootstrap struct {
-	HttpServiceEngine service.HttpServiceEngine
-	HttpServer        *http.Server
-	Project           runner.Options
-}
-
-// LoadHttpService is a load http service function
-func LoadHttpService(serverAddr string) (service.HttpServiceEngine, *http.Server) {
-	log := runner.GetLogger()
-	log.Infof("http server read loading")
-	e := service.HttpServiceEngine{
-		Addr: serverAddr,
-		Middlewares: []gin.HandlerFunc{
-			middleware.Response(),
-			middleware.RequestID(runner.GetLogger()),
-			gin.Recovery(),
-		},
-		Mode: httpServiceMode,
-	}
-	e.RouterGroup = map[string]service.RouterInjector{
-		// web api
-		"/health": new(Router),
-	}
-	s := e.Init()
-	server := &http.Server{Addr: e.Addr, Handler: s}
-	return e, server
-}
-
-func NewBind(appName string, o *runner.Options) *Bootstrap {
-	b := &Bootstrap{}
-	b.Project = *o
-
-	b.HttpServiceEngine, b.HttpServer = LoadHttpService(o.Addr)
-	return b
-}
-
-func (b *Bootstrap) Start() {
-	o := b.Project
-	var g run.Group
-	var once sync.Once
-	type closeOnce struct {
-		C     chan struct{}
-		once  sync.Once
-		Close func()
-	}
-	reloadReady := &closeOnce{
-		C: make(chan struct{}),
-	}
-	reloadReady.Close = func() {
-		reloadReady.once.Do(func() {
-			close(reloadReady.C)
-		})
-	}
-
-	{
-		// termination handler.
-		term := make(chan os.Signal, 1)
-		signal.Notify(term, os.Interrupt, syscall.SIGTERM)
-		cancel := make(chan struct{})
-		g.Add(
-			func() error {
-				select {
-				case <-term:
-					o.Logger.Warn("received sigterm, exiting gracefully...")
-					reloadReady.Close()
-				case <-cancel:
-					reloadReady.Close()
-				}
-				return nil
-			},
-			func(err error) {
-				close(cancel)
-
-			},
-		)
-	}
-
-	{
-		// http server handler.
-		g.Add(
-			func() error {
-				defer o.Logger.Info("http server is returned")
-				err := b.HttpServiceEngine.Start(context.TODO(), b.HttpServer)
-				return err
-			},
-			func(err error) {
-				err = b.HttpServer.Close()
-				if err != nil {
-					o.Logger.Info("http server force exit")
-					os.Exit(127)
-				}
-			},
-		)
-	}
-
-	{
-		// watch config handler.
-		cancel := make(chan struct{})
-		g.Add(
-			func() error {
-				o.WithConfWatch(o.OptionsCtx, &once)
-				<-cancel
-				return nil
-			},
-			func(err error) {
-				close(cancel)
-			},
-		)
-	}
-
-	{
-		// project first log handler.
-		cancel := make(chan struct{})
-		g.Add(
-			func() error {
-				o.Logger.Infof("project start  in: %s", time.Now().String())
-				<-cancel
-				return nil
-			},
-			func(err error) {
-				//o.Logger.Error("showdown app: %s, error: %s", o.Name, err.Error())
-				close(cancel)
-			},
-		)
-	}
-
-	gErr := g.Run()
-	if gErr != nil {
-		panic(gErr)
-	}
-
-	o.Logger.Info("project exit gracefully")
-}
-
+查看例子
+```
+代码在 examples/example-new-bind/example-new-bing_test.go
 ```
 
 
@@ -365,60 +154,9 @@ informer 是对资源的监听，watcher 是对资源的watch。
 
 rollout 是一个面向yaml文件的kubernetes资源的操作，例如kubectl apply 能力。
 
-```
-import (
-	"github.com/illuminatingKong/kongming-kit/kubego/client"
-	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
-	"testing"
-)
+同时提供一个 informer 的能力，对资源的监听，watch。
 
-func TestDemo(t *testing.T) {
-	yamlContent := `apiVersion: v1
-kind: Namespace
-metadata:
-  name: ops
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-deployment-takumi
-  namespace: ops
-  labels:
-    app: nginx
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: nginx
-  template:
-    metadata:
-      labels:
-        app: nginx
-    spec:
-      containers:
-      - name: nginx
-        image: nginx
-        ports:
-        - containerPort: 80`
-	d := &Deploy{}
-	kubeconfig := []byte(``)
-	c, err := client.NewRestClient(kubeconfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cl, err := client.NewClent(c, runtimeclient.Options{})
-	if err != nil {
-		t.Fatal(err)
-	}
-	createErr := d.CreateOrPatch(yamlContent, cl, Option{NameSpace: "ops"})
-	if createErr != nil {
-		panic(createErr)
-	}
-}
-
-
-```
+发布apply能力，参考  rollout/yaml/apply_test.go
 
 监听Pod的状态
 
@@ -432,4 +170,10 @@ func QueryPodsStatus(informer informers.SharedInformerFactory, label map[string]
 生成24位订单号，uuid 包下Generate 闭包函数可以生成。 
 
 
- 
+### http client && sample httpclient
+
+sample httpclient 是基于guzzle.Client的能力,简化操作。支持get、post、put、delete等方法，方便使用。
+
+参考 examples/examplehttpguzzle/examplehttpguzzle_test.go
+
+

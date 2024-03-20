@@ -14,7 +14,7 @@ var NewProvider = func(scheme, instance string) (*SampleProvider, error) {
 	return New(scheme, instance)
 }
 
-type Response guzzle.Response
+//type Response guzzle.Response
 
 type SampleProvider struct {
 	Address    string
@@ -28,7 +28,6 @@ func New(scheme, address string) (*SampleProvider, error) {
 	option := &guzzle.Config{
 		Address: address,
 		Scheme:  scheme,
-		//ValidateHost: true,
 	}
 
 	httpClient, err := guzzle.NewClient(option)
@@ -37,11 +36,12 @@ func New(scheme, address string) (*SampleProvider, error) {
 	}
 	var formatter logrusx.JsonFormatter
 	log := logrusx.New(logrusx.WithFormatter(formatter))
-	return &SampleProvider{Address: address, Scheme: scheme, HttpClient: httpClient, Log: log, Context: context.Background()}, nil
+	return &SampleProvider{Address: address, Scheme: scheme, HttpClient: httpClient, Log: log,
+		Context: context.TODO()}, nil
 
 }
 
-func (p *SampleProvider) Do(method, uri string, option IOptionFun) *Response {
+func (p *SampleProvider) Do(method, uri string, option IOptionFun) *guzzle.Response {
 	r := p.HttpClient.DoNewRequest(method, uri)
 	if len(option.GetHeader()) > 0 {
 		for k, y := range option.GetHeader() {
@@ -65,13 +65,29 @@ func (p *SampleProvider) Do(method, uri string, option IOptionFun) *Response {
 		p.Log.Infof("debug, method: %s, request: %+v, response: %+v\n", method, r.GetRequest(), r, string(o))
 		out.RawResponse.Body = io.NopCloser(bytes.NewBuffer(o))
 	}
-	return (*Response)(out)
+
+	return out
 }
 
-func (r *Response) Json(useStruct interface{}) error {
-	return (*guzzle.Response)(r).Json(useStruct)
+func (p *SampleProvider) Byte(out *guzzle.Response) ([]byte, error) {
+	o, err := io.ReadAll(out.RawResponse.Body)
+	if err != nil {
+		return nil, err
+	}
+	return o, nil
 }
 
-func (r *Response) Xml(useStruct interface{}) error {
-	return (*guzzle.Response)(r).Xml(useStruct)
+func (p *SampleProvider) Json(out *guzzle.Response, useStruct interface{}) (interface{}, error) {
+	err := out.Json(useStruct)
+	if err != nil {
+		return nil, err
+	}
+	return useStruct, nil
+}
+func (p *SampleProvider) Xml(out *guzzle.Response, useStruct interface{}) (interface{}, error) {
+	err := out.Xml(useStruct)
+	if err != nil {
+		return nil, err
+	}
+	return useStruct, nil
 }
