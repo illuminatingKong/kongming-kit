@@ -23,10 +23,11 @@ func ID() string {
 	return uuid.New().String()
 }
 
+var num int64
+
 // 生成24位订单号
 // 前面17位代表时间精确到毫秒，中间3位代表进程id，最后4位代表序号
 func generate(t time.Time) string {
-	var num int64
 	s := t.Format(Continuity)
 	m := t.UnixNano()/1e6 - t.UnixNano()/1e9*1e3
 	ms := sup(m, 3)
