@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/illuminatingKong/kongming-kit/grpc/task/proto";
+
+message TaskRequest {
+  string command = 2; // 命令
+  int32 timeout = 3;  // 任务执行超时时间
+  int64 id = 4; // 执行任务唯一ID
+  string name = 1; // task name
+}
+
+message TaskResponse {
+  string output = 1; // 命令标准输出
+  string error = 2;  // 命令错误
+}
+
+service Task {
+  rpc Run(TaskRequest) returns (TaskResponse) {}
+}
