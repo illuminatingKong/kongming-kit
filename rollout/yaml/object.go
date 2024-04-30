@@ -45,7 +45,7 @@ func Scheme(cl client.Client) *runtime.Scheme {
 	return cl.Scheme()
 }
 
-// ReNewDeploymentResource  can use a fake scheme runtime.NewScheme()
+// ReNew  can use a fake scheme runtime.NewScheme()
 func (d *Deploy) ReNew(yamlText string, rs *runtime.Scheme, opts Option) ([]runtime.Object, error) {
 	resources, err := util.NewResources(yamlText, rs)
 	if err != nil {

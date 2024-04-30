@@ -40,18 +40,3 @@ func (d *Deploy) Apply(objs []runtime.Object, cl client.Client) error {
 
 	return errs.ErrorOrNil()
 }
-
-func (d *Deploy) CreateOrPatch(yamlText string, cl client.Client, opts Option) error {
-	var errs *multierror.Error
-	verifyErr := d.Verify(yamlText)
-	if verifyErr != nil {
-		errs = multierror.Append(errs, verifyErr...)
-		return errs
-	}
-	rs := cl.Scheme()
-	obj, err := d.ReNew(yamlText, rs, opts)
-	if err != nil {
-		return err
-	}
-	return d.Apply(obj, cl)
-}
