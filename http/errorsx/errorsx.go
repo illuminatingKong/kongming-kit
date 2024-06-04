@@ -25,6 +25,7 @@ type IHTTPError interface {
 	Message() string
 	Desc() string
 	Extra() map[string]interface{}
+	Data() interface{}
 }
 
 // HTTPError ...
@@ -79,6 +80,10 @@ func (e *HTTPError) Extra() map[string]interface{} {
 	}
 
 	return extra
+}
+
+func (e *HTTPError) Data() interface{} {
+	return e.data
 }
 
 // AddDesc ...
