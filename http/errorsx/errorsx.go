@@ -33,6 +33,7 @@ type HTTPError struct {
 	err   string
 	desc  string
 	extra map[string]interface{}
+	data  interface{}
 }
 
 // NewHTTPError ...
@@ -95,6 +96,11 @@ func (e *HTTPError) AddDesc(desc string) *HTTPError {
 // AddErr ...
 func (e *HTTPError) AddErr(err error) *HTTPError {
 	e.err = err.Error()
+	return e
+}
+
+func (e *HTTPError) SetData(data interface{}) *HTTPError {
+	e.data = data
 	return e
 }
 
