@@ -146,6 +146,7 @@ func ErrorMessage(err error) (code int, message map[string]interface{}) {
 			"code":        v.Code(),
 			"description": v.Desc(),
 			"extra":       v.Extra(),
+			"data":        v.Data(),
 		}
 	}
 
