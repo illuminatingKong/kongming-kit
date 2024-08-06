@@ -41,7 +41,7 @@ spec:
 		t.Fatal(err)
 	}
 
-	cl, err := client.NewClent(c, runtimeclient.Options{})
+	cl, err := client.NewClient(c, runtimeclient.Options{})
 	if err != nil {
 		t.Fatal(err)
 	}

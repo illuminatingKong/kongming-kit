@@ -43,6 +43,6 @@ func NewRestToClientSet(restConfig *restclient.Config) (*kubernetes.Clientset, e
 	return clientSet, nil
 }
 
-func NewClent(restConfig *restclient.Config, options runtimeclient.Options) (runtimeclient.Client, error) {
+func NewClient(restConfig *restclient.Config, options runtimeclient.Options) (runtimeclient.Client, error) {
 	return runtimeclient.New(restConfig, options)
 }

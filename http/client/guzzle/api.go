@@ -183,10 +183,10 @@ func NewClient(config *Config) (*Client, error) {
 		config.TLSConfig.InsecureSkipVerify = defConfig.TLSConfig.InsecureSkipVerify
 	}
 
-	if config.WaitTime == 0 {
-		config.WaitTime = defConfig.Transport.IdleConnTimeout
-	} else {
-		defConfig.Transport.IdleConnTimeout = config.WaitTime
+	if config.WaitTime != 0 {
+		defConfig.Transport.DialContext = (&net.Dialer{
+			Timeout: config.WaitTime,
+		}).DialContext
 	}
 
 	if config.HttpClient == nil {
