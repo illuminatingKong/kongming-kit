@@ -1,4 +1,4 @@
-package container
+package inter
 
 type Bindings map[string]interface{}
 

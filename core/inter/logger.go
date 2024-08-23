@@ -1,4 +1,4 @@
-package container
+package inter
 
 import "github.com/illuminatingKong/kongming-kit/core/conster"
 
