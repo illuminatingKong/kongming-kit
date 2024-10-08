@@ -1,7 +1,9 @@
 package guzzle
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"time"
 )
@@ -49,4 +51,15 @@ func (resp *Response) Xml(useStruct interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func (resp *Response) Bytes() ([]byte, error) {
+	defer resp.Close()
+	if resp.Err != nil {
+		return nil, resp.Err
+	}
+	o, _ := io.ReadAll(resp.RawResponse.Body)
+	rawBody := io.NopCloser(bytes.NewBuffer(o))
+	rb, _ := io.ReadAll(rawBody)
+	return rb, nil
 }

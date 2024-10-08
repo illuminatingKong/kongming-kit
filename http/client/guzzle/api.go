@@ -256,7 +256,6 @@ func ValidateHostConn(config *Config) error {
 func (r *request) toHTTP() (*http.Request, error) {
 	// Encode the query parameters
 	r.url.RawQuery = r.params.Encode()
-
 	// Check if we should encode the body
 	if r.body == nil && r.obj != nil {
 		b, err := encodeBody(r.obj)
@@ -299,8 +298,6 @@ func (c *Client) NewDoRequest(r *request) (time.Duration, *http.Response, error)
 		return 0, nil, err
 	}
 	start := time.Now()
-	//c.config.HttpClient.Timeout = c.config.WaitTime
-
 	resp, err := c.config.HttpClient.Do(req)
 	if err != nil {
 		return 0, nil, err
@@ -365,24 +362,4 @@ func buildResponse(d time.Duration, resp *http.Response, e error) *Response {
 	defaultResp.Duration = d
 	defaultResp.Err = e
 	return defaultResp
-}
-
-func requireNotFoundOrOK(d time.Duration, resp *http.Response, e error) (bool, time.Duration, *http.Response, error) {
-	if e != nil {
-		if resp != nil {
-			err := resp.Body.Close()
-			if err != nil {
-				return false, 0, nil, err
-			}
-		}
-		return false, d, nil, e
-	}
-	switch resp.StatusCode {
-	case 200:
-		return true, d, resp, nil
-	case 404:
-		return false, d, resp, nil
-	default:
-		return false, d, nil, generateUnexpectedResponseCodeError(resp)
-	}
 }
