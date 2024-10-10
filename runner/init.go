@@ -1,24 +1,25 @@
 package runner
 
 import (
-	"context"
 	"errors"
 	"github.com/illuminatingKong/kongming-kit/base/configx"
 	"github.com/illuminatingKong/kongming-kit/base/configx/config"
+	"github.com/illuminatingKong/kongming-kit/base/filesystem"
 	"github.com/illuminatingKong/kongming-kit/base/logx"
+	"io"
 	"sync"
 	"time"
 )
 
-func (o *Options) NewConfig(dir, configType, name string) *Options {
+func (o *Options) NewConfigFIle(dir, configType, name string) *Options {
 	o.startConf.dir = dir
 	o.startConf.configType = configType
 	o.startConf.name = name
 	return o
 }
 
-func (o *Options) InitBase(ctx context.Context, once *sync.Once) error {
-	err := o.InitConf(ctx, once)
+func (o *Options) InitBase(once *sync.Once) error {
+	err := o.InitConf(once)
 	if err != nil {
 		return err
 	}
@@ -26,17 +27,22 @@ func (o *Options) InitBase(ctx context.Context, once *sync.Once) error {
 	return nil
 }
 
-func (o *Options) InitConf(ctx context.Context, once *sync.Once) error {
+func (o *Options) InitConf(once *sync.Once) error {
 	var err error
 	defer func() {
 		if perr := recover(); perr != nil {
 			o.Logger.Fatal(perr)
 		}
 	}()
-
+	_config := WithConfigOption{
+		ConfigDir:  o.startConf.dir,
+		ConfigType: o.startConf.configType,
+		ConfigName: o.startConf.name,
+		ConfigIO:   o.startConf.configIO,
+	}
 	once.Do(func() {
-		err = o.NewConf(ctx,
-			WithConfX(o.startConf.dir, o.startConf.configType, o.startConf.name))
+		err = o.NewConf(
+			WithConfX(_config))
 		if err != nil {
 			panic(err)
 		}
@@ -47,13 +53,13 @@ func (o *Options) InitConf(ctx context.Context, once *sync.Once) error {
 
 }
 
-func (o *Options) WithConfWatch(ctx context.Context, once *sync.Once) {
+func (o *Options) WithConfWatch(once *sync.Once) {
 	if o.Config == nil {
 		panic(errors.New("conf is nil"))
 	}
 
-	if o.WatchConf > 0 {
-		ticker1 := time.NewTicker(time.Duration(o.WatchConf) * time.Second)
+	if o.WatchConfSecond > 0 {
+		ticker1 := time.NewTicker(time.Duration(o.WatchConfSecond) * time.Second)
 
 		go func(t *time.Ticker, o *Options) {
 			for {
@@ -71,7 +77,7 @@ func (o *Options) WithConfWatch(ctx context.Context, once *sync.Once) {
 
 }
 
-func (o *Options) NewConf(ctx context.Context, opt Option) error {
+func (o *Options) NewConf(opt Option) error {
 	var err error
 	o.Config = opt.get().(configx.Conf)
 	err = o.Config.Load()
@@ -93,10 +99,29 @@ func GetLogger() logx.Logger {
 	return Logger
 }
 
-func WithConfX(dir, configType, name string) Option {
-	newFile := config.NewFile(config.WithConfigsDir(config.ConfigsDir(dir)),
-		config.WithConfigType(config.ConfigType(configType)),
-		config.WithConfigName(config.ConfigName(name)))
+type WithConfigOption struct {
+	ConfigDir  string
+	ConfigType string
+	ConfigName string
+	ConfigIO   io.Reader
+}
+
+func WithConfX(configOption WithConfigOption) Option {
+	var newFile configx.Conf
+	dir := configOption.ConfigDir
+	configType := configOption.ConfigType
+	name := configOption.ConfigName
+	if filesystem.FileExist(dir) {
+		newFile = config.NewFile(config.WithConfigsDir(config.ConfigsDir(dir)),
+			config.WithConfigType(config.ConfigType(configType)),
+			config.WithConfigName(config.ConfigName(name)),
+			config.WithReadType(config.FileType),
+		)
+	} else {
+		newFile = config.NewFile(config.WithConfigIO(configOption.ConfigIO),
+			config.WithReadType(config.IOType))
+	}
+
 	return &option{newFile}
 
 }

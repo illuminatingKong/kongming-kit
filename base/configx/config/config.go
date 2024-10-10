@@ -1,18 +1,30 @@
 package config
 
 import (
+	"errors"
 	"github.com/fsnotify/fsnotify"
 	"github.com/illuminatingKong/kongming-kit/base/configx"
 	"github.com/illuminatingKong/kongming-kit/base/logx"
 	"github.com/illuminatingKong/kongming-kit/base/logx/logrusx"
 	"github.com/spf13/viper"
+	"io"
 )
 
 type ConfigsDir string
 type ConfigName string
 type ConfigType string
+type ReadType string
+type ConfigIO io.Reader
+
+var (
+	FileType    ReadType = "file"
+	IOType      ReadType = "io"
+	FindNotType          = errors.New("find not config type")
+)
 
 type Config struct {
+	ReadType   ReadType
+	ConfigIO   ConfigIO
 	ConfigsDir ConfigsDir
 	ConfigName ConfigName
 	Type       ConfigType
@@ -35,6 +47,14 @@ func NewFile(options ...Option) configx.Conf {
 	return c
 }
 
+func WithReadType(ReadType ReadType) Option {
+	return &option{ReadType}
+}
+
+func WithConfigIO(ConfigIO io.Reader) Option {
+	return &option{ConfigIO}
+}
+
 func WithConfigsDir(ConfigsDir ConfigsDir) Option {
 	return &option{ConfigsDir}
 }
@@ -55,17 +75,26 @@ func processOptions(c *Config, opt interface{}) {
 		c.ConfigName = val
 	case ConfigType:
 		c.Type = val
+	case ReadType:
+		c.ReadType = val
+	case ConfigIO:
+		c.ConfigIO = val
 	}
 }
 
 func (c *Config) Load() error {
-	c.Viper.SetConfigName(string(c.ConfigName))
-	c.Viper.SetConfigType(string(c.Type))
-	c.SetConfigxPath(string(c.ConfigsDir))
-	if err := c.Viper.ReadInConfig(); err != nil { // viper解析配置文件
-		panic(err)
+	// Default
+	if c.ReadType == "" {
+		return FindNotType
 	}
-	return nil
+	if c.ReadType == FileType || len(string(c.ConfigsDir)) > 0 {
+		c.Viper.SetConfigName(string(c.ConfigName))
+		c.Viper.SetConfigType(string(c.Type))
+		c.SetConfigxPath(string(c.ConfigsDir))
+		return c.Viper.ReadInConfig()
+	}
+	c.Viper.SetConfigType(string(c.Type))
+	return c.Viper.ReadConfig(c.ConfigIO)
 }
 
 func (c *Config) Watch() bool {

@@ -67,15 +67,15 @@ func hello(c *gin.Context) {
 }
 
 func TestStartProject(t *testing.T) {
-	o := runner.NewContainer(projectName, addr).NewConfig(
+	o := runner.NewContainer(projectName, addr).NewConfigFIle(
 		configDir, "yaml", projectName)
 	var once sync.Once
-	err := o.InitBase(context.Background(), &once)
+	err := o.InitBase(&once)
 	if err != nil {
 		panic(err)
 	}
 
-	project := NewBind(projectName, o)
+	project := NewBind(o)
 	project.Start()
 }
 
@@ -107,11 +107,11 @@ func LoadHttpService(serverAddr string) (service.HttpServiceEngine, *http.Server
 	return e, server
 }
 
-func NewBind(appName string, o *runner.Options) *Bootstrap {
+func NewBind(o *runner.Options) *Bootstrap {
 	b := &Bootstrap{}
 	b.Project = *o
 
-	b.HttpServiceEngine, b.HttpServer = LoadHttpService(o.Addr)
+	b.HttpServiceEngine, b.HttpServer = LoadHttpService(o.Instance)
 	return b
 }
 
@@ -179,7 +179,7 @@ func (b *Bootstrap) Start() {
 		cancel := make(chan struct{})
 		g.Add(
 			func() error {
-				o.WithConfWatch(o.OptionsCtx, &once)
+				o.WithConfWatch(&once)
 				<-cancel
 				return nil
 			},
