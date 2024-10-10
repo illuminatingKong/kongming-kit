@@ -1,7 +1,6 @@
 package example_newcontainer
 
 import (
-	"context"
 	"fmt"
 	"github.com/illuminatingKong/kongming-kit/runner"
 	"github.com/rifflock/lfshook"
@@ -15,7 +14,7 @@ func TestNewContainer(t *testing.T) {
 	addr := "127.0.0.1:8080"
 	configDir := "$HOME/workspace/illuminatingKong/kongming-kit/examples/example-configx"
 	logPath := "your log path"
-	container := runner.NewContainer(appName, addr).NewConfig(
+	container := runner.NewContainer(appName, addr).NewConfigFIle(
 		configDir, "yaml", appName)
 
 	pathMap := lfshook.PathMap{
@@ -29,7 +28,7 @@ func TestNewContainer(t *testing.T) {
 	))
 
 	var once sync.Once
-	err := container.InitBase(context.Background(), &once)
+	err := container.InitBase(&once)
 	if err != nil {
 		panic(err)
 	}
